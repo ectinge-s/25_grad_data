@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>按职业前景筛选 - 研究生项目筛选工具</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/auth.js"></script>
+</head>
+<body>
+    <header>
+        <h1>按职业前景筛选专业领域</h1>
+        <a href="index.html">返回首页</a>
+    </header>
+    <main>
+        <div class="filter-container">
+            <h2>选择职业方向</h2>
+            <div id="career-checkboxes">
+                <!-- Will be populated by JavaScript -->
+            </div>
+            <button id="filter-career-btn">筛选</button>
+        </div>
+        <div class="results-container">
+            <h2>相关专业领域及子领域</h2>
+            <div id="fos-results">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </main>
+    <script src="js/dataLoader.js"></script>
+    <script src="js/filterFunctions.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

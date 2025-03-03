@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>按专业领域筛选 - 研究生项目筛选工具</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/auth.js"></script>
+</head>
+<body>
+    <header>
+        <h1>按专业领域筛选项目</h1>
+        <a href="index.html">返回首页</a>
+    </header>
+    <main>
+        <div class="filter-container">
+            <h2>选择专业领域</h2>
+            <select id="fos-dropdown">
+                <option value="">请选择...</option>
+                <!-- Will be populated by JavaScript -->
+            </select>
+        </div>
+        <div class="results-container">
+            <h2>专业子领域及职业前景</h2>
+            <div id="subfos-careers">
+                <!-- Will be populated by JavaScript -->
+            </div>
+            
+            <h2>主要匹配项目</h2>
+            <div id="primary-matches">
+                <!-- Table will be inserted here -->
+            </div>
+            
+            <h2>次要匹配项目</h2>
+            <div id="secondary-matches">
+                <!-- Table will be inserted here -->
+            </div>
+        </div>
+    </main>
+    <script src="js/dataLoader.js"></script>
+    <script src="js/filterFunctions.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
