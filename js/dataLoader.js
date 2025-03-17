@@ -7,17 +7,17 @@ let fosCareerData = [];
 async function loadAllData() {
     try {
         // Load program data
-        const programsResponse = await fetch('/25_grad_data/data/250318/1_programs.csv');
+        const programsResponse = await fetch('1_programs.csv');
         const programsText = await programsResponse.text();
         programsData = parseCSV(programsText);
         
         // Load program-FoS mapping
-        const programsFoSResponse = await fetch('/25_grad_data/data/250318/2_programs_fos.csv');
+        const programsFoSResponse = await fetch('2_programs_fos.csv');
         const programsFoSText = await programsFoSResponse.text();
         programsFoSData = parseCSV(programsFoSText);
         
         // Load FoS-Career mapping
-        const fosCareerResponse = await fetch('/25_grad_data/data/250318/3_fos_career.csv');
+        const fosCareerResponse = await fetch('3_fos_career.csv');
         const fosCareerText = await fosCareerResponse.text();
         fosCareerData = parseCSV(fosCareerText);
         
