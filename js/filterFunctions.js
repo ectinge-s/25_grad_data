@@ -244,7 +244,7 @@ function displayNormalTable(programs, container) {
             }
             else if (isLongTextColumn(column)) {
                 const cellContent = program[column] || '';
-                resultHTML += `<td class="long-text-column">
+                tableHTML += `<td class="long-text-column">
                     <div class="expandable-cell">
                         <div class="truncate-cell">${cellContent}</div>
                         <div class="hover-trigger"></div>
@@ -747,7 +747,7 @@ function displayNormalFoSTable(programs, container) {
             }
             else if (isLongTextColumn(column)) {
                 const cellContent = program[column] || '';
-                resultHTML += `<td class="long-text-column">
+                tableHTML += `<td class="long-text-column">
                     <div class="expandable-cell">
                         <div class="truncate-cell">${cellContent}</div>
                         <div class="hover-trigger"></div>
