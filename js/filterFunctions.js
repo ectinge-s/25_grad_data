@@ -218,7 +218,7 @@ function displayNormalTable(programs, container) {
     columns.forEach(column => {
         // Add class for long text columns
         const columnClass = isLongTextColumn(column) ? 'class="long-text-column"' : '';
-        tableHTML += `<th ${columnClass}>${column}</th>`;
+        tableHTML += `<th>${column}</th>`;
     });
     tableHTML += '</tr>';
     
