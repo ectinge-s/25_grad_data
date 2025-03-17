@@ -1,3 +1,7 @@
+// Variable to store currently filtered programs
+let currentFilteredPrograms = [];
+let activeTrackFilters = [];
+
 // Function to filter programs by school
 function filterBySchool() {
     // Get selected schools
@@ -27,20 +31,23 @@ function filterBySchool() {
     let primaryHeader = "";
     let secondaryHeader = "";
     let matchingDescHeader = "";
+    let ivyTrackHeader = "";
     
     if (programsFoSData.length > 0) {
         const headers = Object.keys(programsFoSData[0]);
         primaryHeader = headers.find(h => h.includes("主要对口科系"));
         secondaryHeader = headers.find(h => h.includes("次要可行科系"));
         matchingDescHeader = headers.find(h => h.includes("专业匹配说明"));
+        ivyTrackHeader = headers.find(h => h.includes("爬藤赛道"));
     }
     
     // Use the found headers or fall back to the expected ones
     const primaryFieldName = primaryHeader || "主要对口科系（符合专业主要学术方向）";
     const secondaryFieldName = secondaryHeader || "次要可行科系（申请材料与作品集中必须向该专业主要学术方向靠拢，或体现相关技能与认知）";
     const matchingDescFieldName = matchingDescHeader || "专业匹配说明";
+    const ivyTrackFieldName = ivyTrackHeader || "爬藤赛道";
     
-    console.log("Using field names:", { primaryFieldName, secondaryFieldName, matchingDescFieldName });
+    console.log("Using field names:", { primaryFieldName, secondaryFieldName, matchingDescFieldName, ivyTrackFieldName });
     
     // Then get corresponding program details from programsData
     matchingProgramsFoS.forEach(program => {
@@ -51,6 +58,7 @@ function filterBySchool() {
         const primaryFoS = program[primaryFieldName] || '';
         const secondaryFoS = program[secondaryFieldName] || '';
         const matchingDescription = program[matchingDescFieldName] || '';
+        const ivyTrack = program[ivyTrackFieldName] || '';
         
         // Find detailed program info
         const detailedProgram = programsData.find(p => 
@@ -62,7 +70,8 @@ function filterBySchool() {
                 ...detailedProgram,
                 primaryFoS: primaryFoS,
                 secondaryFoS: secondaryFoS,
-                matchingDescription: matchingDescription
+                matchingDescription: matchingDescription,
+                ivyTrack: ivyTrack
             });
         } else {
             // If detailed info not found, use basic info
@@ -71,15 +80,109 @@ function filterBySchool() {
                 '目标院校可申请专业': programName,
                 primaryFoS: primaryFoS,
                 secondaryFoS: secondaryFoS,
-                matchingDescription: matchingDescription
+                matchingDescription: matchingDescription,
+                ivyTrack: ivyTrack
             });
         }
     });
     
     console.log("Final filtered programs:", filteredPrograms.length);
     
+    // Store current filtered programs for later filtering
+    currentFilteredPrograms = [...filteredPrograms];
+    
+    // Apply track filter if active
+    const finalPrograms = applyTrackFilter(filteredPrograms);
+    
     // Generate and display the results table
+    displayProgramResults(finalPrograms);
+}
+
+// Function to filter by ivy track
+function filterByIvyTrack() {
+    if (currentFilteredPrograms.length === 0) {
+        // No programs to filter
+        return;
+    }
+    
+    // Apply track filter to current programs
+    const filteredPrograms = applyTrackFilter(currentFilteredPrograms);
+    
+    // Display filtered results
     displayProgramResults(filteredPrograms);
+    
+    // Update the dropdown button text to show active filters
+    updateTrackFilterButton();
+}
+
+// Helper function to apply track filter
+function applyTrackFilter(programs) {
+    // If no active track filters, return all programs
+    if (activeTrackFilters.length === 0) {
+        return programs;
+    }
+    
+    // Filter programs by track
+    return programs.filter(program => {
+        const trackValue = program.ivyTrack || '';
+        
+        // For each active filter, check if the track value contains it
+        return activeTrackFilters.some(filter => {
+            // Split by Chinese and English commas
+            const trackValues = trackValue.split(/[,，]/);
+            
+            // Check if any of the split values matches the filter
+            return trackValues.some(value => {
+                const trimmedValue = value.trim();
+                return trimmedValue === filter;
+            });
+        });
+    });
+}
+
+// Function to update track filter button text
+function updateTrackFilterButton() {
+    const filterButton = document.getElementById('ivy-track-btn');
+    
+    if (activeTrackFilters.length === 0) {
+        filterButton.textContent = '选择赛道 ▼';
+        filterButton.classList.remove('has-track-filters');
+    } else {
+        filterButton.textContent = `赛道: ${activeTrackFilters.join(', ')} ▼`;
+        filterButton.classList.add('has-track-filters');
+    }
+}
+
+// Function to clear track filters
+// Function to clear track filters
+function clearTrackFilters() {
+    // Clear checkboxes
+    document.querySelectorAll('#ivy-track-dropdown input[type="checkbox"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // Clear active filters
+    activeTrackFilters = [];
+    
+    // Update button
+    updateTrackFilterButton();
+    
+    // Determine which page we're on and apply the appropriate refresh
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage === 'filter-by-school.html' || currentPage === '') {
+        // Re-filter to show all current filtered programs for school page
+        if (currentFilteredPrograms.length > 0) {
+            displayProgramResults(currentFilteredPrograms);
+        }
+    } else if (currentPage === 'filter-by-fos.html') {
+        // Re-filter to show all current filtered programs for FoS page
+        if (currentPrimaryMatches.length > 0) {
+            displayFoSProgramResults(currentPrimaryMatches, 'primary-matches');
+        }
+        if (currentSecondaryMatches.length > 0) {
+            displayFoSProgramResults(currentSecondaryMatches, 'secondary-matches');
+        }
+    }
 }
 
 // Function to display program results as a table
@@ -91,18 +194,31 @@ function displayProgramResults(programs) {
         return;
     }
     
+    // If no active track filters, display normal table
+    if (activeTrackFilters.length === 0) {
+        displayNormalTable(programs, resultsContainer);
+    } else {
+        // Group programs by track type
+        displayGroupedTable(programs, resultsContainer);
+    }
+}
+
+// Function to display normal table without grouping
+function displayNormalTable(programs, container) {
     // Create table
     let tableHTML = '<table>';
     
     // Table headers - get columns from first program but exclude specified columns
     const firstProgram = programs[0];
-    const excludedColumns = ['院校背景要求', '实习实践（背景提升）要求', '实习实践（背景提升）要求-中文', 'primaryFoS', 'secondaryFoS', 'matchingDescription'];
+    const excludedColumns = ['院校背景要求', '实习实践（背景提升）要求', '实习实践（背景提升）要求-中文', 'primaryFoS', 'secondaryFoS', 'matchingDescription', 'ivyTrack', '爬藤赛道'];
     const columns = Object.keys(firstProgram).filter(key => !excludedColumns.includes(key));
     
     // Add header row
     tableHTML += '<tr>';
     columns.forEach(column => {
-        tableHTML += `<th>${column}</th>`;
+        // Add class for long text columns
+        const columnClass = isLongTextColumn(column) ? 'class="long-text-column"' : '';
+        tableHTML += `<th ${columnClass}>${column}</th>`;
     });
     tableHTML += '</tr>';
     
@@ -126,6 +242,16 @@ function displayProgramResults(programs) {
             else if (column === '目标院校') {
                 tableHTML += `<td><span class="school-name" data-school="${program[column]}">${program[column]}</span></td>`;
             }
+            else if (isLongTextColumn(column)) {
+                const cellContent = program[column] || '';
+                resultHTML += `<td class="long-text-column">
+                    <div class="expandable-cell">
+                        <div class="truncate-cell">${cellContent}</div>
+                        <div class="hover-trigger"></div>
+                        <div class="expanded-content">${cellContent}</div>
+                    </div>
+                </td>`;
+            }
             else {
                 tableHTML += `<td>${program[column] || ''}</td>`;
             }
@@ -134,7 +260,7 @@ function displayProgramResults(programs) {
     });
     
     tableHTML += '</table>';
-    resultsContainer.innerHTML = tableHTML;
+    container.innerHTML = tableHTML;
     
     // Add event listeners for program name hover
     setTimeout(() => {
@@ -144,6 +270,180 @@ function displayProgramResults(programs) {
         attachSchoolClickListeners();
     }, 100); // Small delay to ensure DOM is updated
 }
+
+// Function to display table grouped by track type
+function displayGroupedTable(programs, container) {
+    // Table headers - get columns from first program but exclude specified columns
+    const firstProgram = programs[0];   
+    const excludedColumns = ['院校背景要求', '实习实践（背景提升）要求', '实习实践（背景提升）要求-中文', 'primaryFoS', 'secondaryFoS', 'matchingDescription', 'ivyTrack', '爬藤赛道'];
+    const columns = Object.keys(firstProgram).filter(key => !excludedColumns.includes(key));
+    
+    let resultHTML = '';
+    
+    // Process each active track filter
+    activeTrackFilters.forEach(track => {
+        // Filter programs that match this track
+        const trackPrograms = programs.filter(program => {
+            const trackValue = program.ivyTrack || '';
+            const trackValues = trackValue.split(/[,，]/).map(v => v.trim());
+            return trackValues.includes(track);
+        });
+        
+        if (trackPrograms.length > 0) {
+            // Add section for this track
+            resultHTML += `<div class="track-group">`;
+            let trackFullName;
+            switch(track) {
+                case 'DT':
+                    trackFullName = 'Design + Tech';
+                    break;
+                case 'AT':
+                    trackFullName = 'Art + Tech';
+                    break;
+                case 'AH':
+                    trackFullName = 'Art + Humanity';
+                    break;
+                case 'DH':
+                    trackFullName = 'Design + Humanity';
+                    break;
+                case 'ADB':
+                    trackFullName = 'Art/Design + Business';
+                    break;
+                default:
+                    trackFullName = track;
+            }
+            resultHTML += `<h3 class="track-heading ${track}">赛道: ${trackFullName} (${trackPrograms.length}个项目)</h3>`;
+            
+            // Create table for this track
+            resultHTML += '<table>';
+            
+            // Add header row
+            resultHTML += '<tr>';
+            columns.forEach(column => {
+                const columnClass = isLongTextColumn(column) ? 'class="long-text-column"' : '';
+                resultHTML += `<th>${column}</th>`;
+            });
+            resultHTML += '</tr>';
+            
+            // Add data rows
+            trackPrograms.forEach(program => {
+                resultHTML += '<tr>';
+                columns.forEach(column => {
+                    // Special handling for program name to add hover functionality
+                    if (column === '目标院校可申请专业') {
+                        // Ensure we escape quotes in the attribute values
+                        const primaryFoS = (program.primaryFoS || '').replace(/"/g, '&quot;');
+                        const secondaryFoS = (program.secondaryFoS || '').replace(/"/g, '&quot;');
+                        const matchingDesc = (program.matchingDescription || '').replace(/"/g, '&quot;');
+                        
+                        resultHTML += `<td><span class="program-name" 
+                            data-primary="${primaryFoS}" 
+                            data-secondary="${secondaryFoS}"
+                            data-matching="${matchingDesc}">${program[column]}</span></td>`;
+                    } 
+                    // Special handling for school name to make it clickable
+                    else if (column === '目标院校') {
+                        resultHTML += `<td><span class="school-name" data-school="${program[column]}">${program[column]}</span></td>`;
+                    }
+                    else if (isLongTextColumn(column)) {
+                        const cellContent = program[column] || '';
+                        resultHTML += `<td class="long-text-column">
+                            <div class="expandable-cell">
+                                <div class="truncate-cell">${cellContent}</div>
+                                <div class="hover-trigger"></div>
+                                <div class="expanded-content">${cellContent}</div>
+                            </div>
+                        </td>`;
+                    }
+                    else {
+                        resultHTML += `<td>${program[column] || ''}</td>`;
+                    }
+                });
+                resultHTML += '</tr>';
+            });
+            
+            resultHTML += '</table>';
+            resultHTML += `</div>`;
+        }
+    });
+    
+    // If no results found for any track
+    if (resultHTML === '') {
+        container.innerHTML = '<p>没有找到符合条件的项目</p>';
+        return;
+    }
+    
+    container.innerHTML = resultHTML;
+    
+    // Add event listeners for program name hover
+    setTimeout(() => {
+        attachProgramHoverListeners();
+        
+        // Add event listeners for school name clicks
+        attachSchoolClickListeners();
+    }, 100); // Small delay to ensure DOM is updated
+}
+
+// Initialize the ivy track filter dropdown
+function initializeIvyTrackFilter() {
+    // Toggle dropdown when button is clicked
+    const dropdownBtn = document.getElementById('ivy-track-btn');
+    const dropdown = document.getElementById('ivy-track-dropdown');
+    
+    if (dropdownBtn && dropdown) {
+        dropdownBtn.addEventListener('click', function() {
+            dropdown.classList.toggle('show');
+        });
+        
+        // Close dropdown when clicking outside
+        window.addEventListener('click', function(event) {
+            if (!event.target.matches('.dropdown-btn') && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+        
+        // Handle apply filter button
+        const applyBtn = document.getElementById('apply-track-filter');
+        if (applyBtn) {
+            applyBtn.addEventListener('click', function() {
+                // Get selected track values
+                activeTrackFilters = [];
+                const checkboxes = document.querySelectorAll('#ivy-track-dropdown input[type="checkbox"]:checked');
+                checkboxes.forEach(checkbox => {
+                    activeTrackFilters.push(checkbox.value);
+                });
+                
+                // Determine which page we're on and apply the appropriate filter
+                const currentPage = window.location.pathname.split('/').pop();
+                if (currentPage === 'filter-by-school.html' || currentPage === '') {
+                    filterByIvyTrack();
+                } else if (currentPage === 'filter-by-fos.html') {
+                    filterFoSByTrack();
+                }
+                
+                // Close dropdown
+                dropdown.classList.remove('show');
+            });
+        }
+        
+        // Handle clear filter button
+        const clearBtn = document.getElementById('clear-track-filter');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                clearTrackFilters();
+                
+                // Close dropdown
+                dropdown.classList.remove('show');
+            });
+        }
+    }
+}
+
+// Original functions below (unchanged)
+// Function to filter programs by Field of Study
+// Variables to store currently filtered FoS programs
+let currentPrimaryMatches = [];
+let currentSecondaryMatches = [];
 
 // Function to filter programs by Field of Study
 function filterByFoS() {
@@ -215,9 +515,36 @@ function filterByFoS() {
     const primaryProgramDetails = getProgramDetails(primaryMatches);
     const secondaryProgramDetails = getProgramDetails(secondaryMatches);
     
+    // Store current matches for later filtering
+    currentPrimaryMatches = [...primaryProgramDetails];
+    currentSecondaryMatches = [...secondaryProgramDetails];
+    
+    // Apply track filter if active
+    const filteredPrimaryMatches = applyTrackFilter(primaryProgramDetails);
+    const filteredSecondaryMatches = applyTrackFilter(secondaryProgramDetails);
+    
     // Display results
-    displayFoSProgramResults(primaryProgramDetails, 'primary-matches');
-    displayFoSProgramResults(secondaryProgramDetails, 'secondary-matches');
+    displayFoSProgramResults(filteredPrimaryMatches, 'primary-matches');
+    displayFoSProgramResults(filteredSecondaryMatches, 'secondary-matches');
+}
+
+// Function to filter FoS page results by track
+function filterFoSByTrack() {
+    if (currentPrimaryMatches.length === 0 && currentSecondaryMatches.length === 0) {
+        // No programs to filter
+        return;
+    }
+    
+    // Apply track filter to current programs
+    const filteredPrimaryMatches = applyTrackFilter(currentPrimaryMatches);
+    const filteredSecondaryMatches = applyTrackFilter(currentSecondaryMatches);
+    
+    // Display filtered results
+    displayFoSProgramResults(filteredPrimaryMatches, 'primary-matches');
+    displayFoSProgramResults(filteredSecondaryMatches, 'secondary-matches');
+    
+    // Update the dropdown button text
+    updateTrackFilterButton();
 }
 
 // Function to display sub-fields and careers for a FoS
@@ -283,7 +610,6 @@ function displaySubfieldsAndCareers(selectedFoS) {
 }
 
 // Function to get detailed program information
-// Updated getProgramDetails function
 function getProgramDetails(programsList) {
     const programDetails = [];
     
@@ -291,18 +617,21 @@ function getProgramDetails(programsList) {
     let primaryHeader = "";
     let secondaryHeader = "";
     let matchingDescHeader = "";
+    let ivyTrackHeader = "";
     
     if (programsFoSData.length > 0) {
         const headers = Object.keys(programsFoSData[0]);
         primaryHeader = headers.find(h => h.includes("主要对口科系"));
         secondaryHeader = headers.find(h => h.includes("次要可行科系"));
         matchingDescHeader = headers.find(h => h.includes("专业匹配说明"));
+        ivyTrackHeader = headers.find(h => h.includes("爬藤赛道"));
     }
     
     // Use the found headers or fall back to the expected ones
     const primaryFieldName = primaryHeader || "主要对口科系（符合专业主要学术方向）";
     const secondaryFieldName = secondaryHeader || "次要可行科系（申请材料与作品集中必须向该专业主要学术方向靠拢，或体现相关技能与认知）";
     const matchingDescFieldName = matchingDescHeader || "专业匹配说明";
+    const ivyTrackFieldName = ivyTrackHeader || "爬藤赛道";
     
     programsList.forEach(program => {
         const programName = program['目标院校可申请专业'];
@@ -312,6 +641,7 @@ function getProgramDetails(programsList) {
         let primaryFoS = '';
         let secondaryFoS = '';
         let matchingDescription = '';
+        let ivyTrack = '';
         
         // Get values from current program object if available
         if (program[primaryFieldName]) {
@@ -326,6 +656,10 @@ function getProgramDetails(programsList) {
             matchingDescription = program[matchingDescFieldName];
         }
         
+        if (program[ivyTrackFieldName]) {
+            ivyTrack = program[ivyTrackFieldName];
+        }
+        
         // Find detailed program info
         const detailedProgram = programsData.find(p => 
             p['目标院校'] === school && p['目标院校可申请专业'] === programName
@@ -336,7 +670,8 @@ function getProgramDetails(programsList) {
                 ...detailedProgram,
                 primaryFoS: primaryFoS,
                 secondaryFoS: secondaryFoS,
-                matchingDescription: matchingDescription
+                matchingDescription: matchingDescription,
+                ivyTrack: ivyTrack
             });
         } else {
             // If detailed info not found, use basic info
@@ -345,7 +680,8 @@ function getProgramDetails(programsList) {
                 '目标院校可申请专业': programName,
                 primaryFoS: primaryFoS,
                 secondaryFoS: secondaryFoS,
-                matchingDescription: matchingDescription
+                matchingDescription: matchingDescription,
+                ivyTrack: ivyTrack
             });
         }
     });
@@ -361,18 +697,30 @@ function displayFoSProgramResults(programs, containerId) {
         resultsContainer.innerHTML = '<p>没有找到符合条件的项目</p>';
         return;
     }
-    
+
+    // If no active track filters, display normal table
+    if (activeTrackFilters.length === 0) {
+        displayNormalFoSTable(programs, resultsContainer);
+    } else {
+        // Group programs by track type
+        displayGroupedFoSTable(programs, resultsContainer);
+    }
+}
+
+// Function to display normal table for FoS without grouping
+function displayNormalFoSTable(programs, container) {
     // Create table
     let tableHTML = '<table>';
     
     // Table headers - get columns from first program but exclude specified columns
     const firstProgram = programs[0];
-    const excludedColumns = ['院校背景要求', '实习实践（背景提升）要求', '实习实践（背景提升）要求-中文', 'primaryFoS', 'secondaryFoS', 'matchingDescription'];
+    const excludedColumns = ['院校背景要求', '实习实践（背景提升）要求', '实习实践（背景提升）要求-中文', 'primaryFoS', 'secondaryFoS', 'matchingDescription', 'ivyTrack', '爬藤赛道'];
     const columns = Object.keys(firstProgram).filter(key => !excludedColumns.includes(key));
     
     // Add header row
     tableHTML += '<tr>';
     columns.forEach(column => {
+        const columnClass = isLongTextColumn(column) ? 'class="long-text-column"' : '';
         tableHTML += `<th>${column}</th>`;
     });
     tableHTML += '</tr>';
@@ -397,6 +745,16 @@ function displayFoSProgramResults(programs, containerId) {
             else if (column === '目标院校') {
                 tableHTML += `<td><span class="school-name" data-school="${program[column]}">${program[column]}</span></td>`;
             }
+            else if (isLongTextColumn(column)) {
+                const cellContent = program[column] || '';
+                resultHTML += `<td class="long-text-column">
+                    <div class="expandable-cell">
+                        <div class="truncate-cell">${cellContent}</div>
+                        <div class="hover-trigger"></div>
+                        <div class="expanded-content">${cellContent}</div>
+                    </div>
+                </td>`;
+            }
             else {
                 tableHTML += `<td>${program[column] || ''}</td>`;
             }
@@ -405,7 +763,122 @@ function displayFoSProgramResults(programs, containerId) {
     });
     
     tableHTML += '</table>';
-    resultsContainer.innerHTML = tableHTML;
+    container.innerHTML = tableHTML;
+    
+    // Add event listeners for program name hover
+    setTimeout(() => {
+        attachProgramHoverListeners();
+        
+        // Add event listeners for school name clicks
+        attachSchoolClickListeners();
+    }, 100); // Small delay to ensure DOM is updated
+}
+
+// Function to display table grouped by track type for FoS
+function displayGroupedFoSTable(programs, container) {
+    // Table headers - get columns from first program but exclude specified columns
+    const firstProgram = programs[0];
+    const excludedColumns = ['院校背景要求', '实习实践（背景提升）要求', '实习实践（背景提升）要求-中文', 'primaryFoS', 'secondaryFoS', 'matchingDescription', 'ivyTrack', '爬藤赛道'];
+    const columns = Object.keys(firstProgram).filter(key => !excludedColumns.includes(key));
+    
+    let resultHTML = '';
+    
+    // Process each active track filter
+    activeTrackFilters.forEach(track => {
+        // Filter programs that match this track
+        const trackPrograms = programs.filter(program => {
+            const trackValue = program.ivyTrack || '';
+            const trackValues = trackValue.split(/[,，]/).map(v => v.trim());
+            return trackValues.includes(track);
+        });
+        
+        if (trackPrograms.length > 0) {
+            // Get the full name of the track
+            let trackFullName;
+            switch(track) {
+                case 'DT':
+                    trackFullName = 'Design + Tech';
+                    break;
+                case 'AT':
+                    trackFullName = 'Art + Tech';
+                    break;
+                case 'AH':
+                    trackFullName = 'Art + Humanity';
+                    break;
+                case 'DH':
+                    trackFullName = 'Design + Humanity';
+                    break;
+                case 'ADB':
+                    trackFullName = 'Art/Design + Business';
+                    break;
+                default:
+                    trackFullName = track;
+            }
+            
+            // Add section for this track
+            resultHTML += `<div class="track-group">`;
+            resultHTML += `<h3 class="track-heading ${track}">赛道: ${trackFullName} (${trackPrograms.length}个项目)</h3>`;
+            
+            // Create table for this track
+            resultHTML += '<table>';
+            
+            // Add header row
+            resultHTML += '<tr>';
+            columns.forEach(column => {
+                const columnClass = isLongTextColumn(column) ? 'class="long-text-column"' : '';
+                resultHTML += `<th>${column}</th>`;
+            });
+            resultHTML += '</tr>';
+            
+            // Add data rows
+            trackPrograms.forEach(program => {
+                resultHTML += '<tr>';
+                columns.forEach(column => {
+                    // Special handling for program name to add hover functionality
+                    if (column === '目标院校可申请专业') {
+                        // Ensure we escape quotes in the attribute values
+                        const primaryFoS = (program.primaryFoS || '').replace(/"/g, '&quot;');
+                        const secondaryFoS = (program.secondaryFoS || '').replace(/"/g, '&quot;');
+                        const matchingDesc = (program.matchingDescription || '').replace(/"/g, '&quot;');
+                        
+                        resultHTML += `<td><span class="program-name" 
+                            data-primary="${primaryFoS}" 
+                            data-secondary="${secondaryFoS}"
+                            data-matching="${matchingDesc}">${program[column]}</span></td>`;
+                    } 
+                    // Special handling for school name to make it clickable
+                    else if (column === '目标院校') {
+                        resultHTML += `<td><span class="school-name" data-school="${program[column]}">${program[column]}</span></td>`;
+                    }
+                    else if (isLongTextColumn(column)) {
+                        const cellContent = program[column] || '';
+                        resultHTML += `<td class="long-text-column">
+                            <div class="expandable-cell">
+                                <div class="truncate-cell">${cellContent}</div>
+                                <div class="hover-trigger"></div>
+                                <div class="expanded-content">${cellContent}</div>
+                            </div>
+                        </td>`;
+                    }
+                    else {
+                        resultHTML += `<td>${program[column] || ''}</td>`;
+                    }
+                });
+                resultHTML += '</tr>';
+            });
+            
+            resultHTML += '</table>';
+            resultHTML += `</div>`;
+        }
+    });
+    
+    // If no results found for any track
+    if (resultHTML === '') {
+        container.innerHTML = '<p>没有找到符合条件的项目</p>';
+        return;
+    }
+    
+    container.innerHTML = resultHTML;
     
     // Add event listeners for program name hover
     setTimeout(() => {
@@ -729,4 +1202,15 @@ function attachCareerClickListeners() {
             window.location.href = `filter-by-career.html?career=${encodeURIComponent(career)}`;
         });
     });
+}
+
+function isLongTextColumn(columnName) {
+    return columnName === '专业背景要求' || 
+           columnName === 'GPA要求 四分制或百分制' || 
+           columnName === '语言要求' || 
+           columnName === '作品集要求' ||
+           columnName.includes('背景要求') ||
+           columnName.includes('GPA') ||
+           columnName.includes('语言') ||
+           columnName.includes('作品集');
 }

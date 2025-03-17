@@ -80,16 +80,101 @@ body {
   
   /* Table Styling */
   table {
+    table-layout: fixed; /* Fixed table layout for better column width control */
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin-bottom: 2rem;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    background-color: #fff;
   }
-  
+
+  /* Style for columns with potentially long text */
+  table th.long-text-column,
+  table td.long-text-column {
+    width: 180px; /* Set fixed width for these columns */
+    max-width: 180px;
+    position: relative; /* Make the cell a positioning context */
+    padding: 10px; /* Add some padding to prevent text butting up against edges */
+  }
+
+  table th:nth-child(1), /* 目标院校 column */
+  table td:nth-child(1) {
+    width: 120px;
+  }
+
+  table th:nth-child(2), /* 目标院校可申请专业 column */
+  table td:nth-child(2) {
+    width: 160px;
+  }
+
+  /* Text truncation and hover expansion for cells with long text */
+  .truncate-cell {
+    max-height: 60px; /* Limit height of cell */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal; /* Allow text to wrap */
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Show only 3 lines */
+    -webkit-box-orient: vertical;
+  }
+
+  .expandable-cell {
+    position: relative;
+  }
+
+  .expandable-cell .hover-trigger {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 5;
+  }
+
+  /* Expanded content */
+  .expandable-cell .expanded-content {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    width: 250px; /* Fixed width for expanded popup */
+    max-height: 300px; /* Maximum height for very long content */
+    overflow-y: auto; /* Add scrollbar if content is very long */
+    z-index: 10;
+    border: 1px solid #e7e7e7;
+  }
+
+  /* Show expanded content when hover-trigger is hovered */
+  .expandable-cell .hover-trigger:hover + .expanded-content,
+  .expandable-cell .expanded-content:hover {
+    display: block;
+  }
+
+  .truncate-cell:hover {
+    max-height: none;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+    z-index: 10; /* Ensure the expanded text appears above other content */
+    background-color: #fff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    padding: 8px;
+    border-radius: 4px;
+    position: absolute;
+    width: calc(100% - 16px); /* Account for padding */
+    left: 0;
+    top: 0;
+  }
+
+  /* For mobile devices, adjust column widths */
+  @media (max-width: 768px) {
+      table th.long-text-column,
+      table td.long-text-column {
+          width: 150px;
+          max-width: 150px;
+      }
+  }
+
   th, td {
     padding: 12px 16px;
     text-align: left;
@@ -177,7 +262,7 @@ body {
   
   #school-checkboxes,
   #career-checkboxes {
-    max-height: 400px;
+    max-height: 300px;
     overflow-y: auto;
     margin: 1rem 0;
     padding: 0.5rem;
@@ -537,3 +622,229 @@ body {
     color: #6e6e73;
     font-size: 1.1rem;
   }
+
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.5rem;
+}
+
+.results-header h2 {
+    margin-bottom: 0;
+}
+
+/* Ivy track filter styles */
+.ivy-track-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ivy-track-filter label {
+  margin: 0;
+  padding: 0;
+}
+
+/* Dropdown styling */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-btn {
+  margin: 0;  /* Reset browser default margin */
+  padding: 8px 16px;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  line-height: 1;
+  display: inline-flex; /* Changed to inline-flex */
+  align-items: center;
+  justify-content: space-between;
+  vertical-align: middle; /* Added vertical-align */
+  /* Other properties remain the same */
+}
+
+/* Target the button directly with higher specificity */
+button.dropdown-btn {
+  margin: 0;
+  padding: 8px 16px;
+}
+
+.dropdown-btn:hover {
+    background-color: #f5f5f7;
+    color: #1d1d1f;
+}
+
+.dropdown-btn:active {
+    transform: scale(0.98);
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    min-width: 200px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    z-index: 1;
+    padding: 10px;
+    border: 1px solid #e7e7e7;
+}
+
+.dropdown-content.show {
+    display: block;
+}
+
+.dropdown-item {
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-item:hover {
+    background-color: #f5f5f7;
+    border-radius: 6px;
+}
+
+.dropdown-item input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #d2d2d7;
+    border-radius: 4px;
+    margin-right: 10px;
+    position: relative;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.dropdown-item input[type="checkbox"]:checked {
+    background-color: #0066cc;
+    border-color: #0066cc;
+}
+
+.dropdown-item input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.dropdown-item label {
+    cursor: pointer;
+}
+
+.dropdown-controls {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-top: 1px solid #e7e7e7;
+    margin-top: 5px;
+}
+
+.dropdown-controls button {
+    background-color: #f5f5f7;
+    color: #1d1d1f;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    margin-top: 0;
+}
+
+.dropdown-controls button:hover {
+    background-color: #e7e7e7;
+}
+
+#apply-track-filter {
+    background-color: #0066cc;
+    color: white;
+}
+
+#apply-track-filter:hover {
+    background-color: #0077ed;
+}
+
+/* Filtered checkbox styling */
+.active-filter {
+    background-color: #E9F5FF;
+    border-color: #0066cc;
+    color: #0066cc;
+}
+
+/* When there are active track filters */
+.has-track-filters {
+    color: #0066cc;
+    border-color: #0066cc;
+    background-color: #E9F5FF;
+} 
+
+.track-group {
+  margin-bottom: 30px;
+}
+
+.track-heading {
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Track heading colors matching the badges */
+.track-heading.DT {
+  background-color: #E3F2FD;
+  color: #0D47A1;
+  border-left: 5px solid #90CAF9;
+}
+
+.track-heading.DH {
+  background-color: #E8F5E9;
+  color: #1B5E20;
+  border-left: 5px solid #A5D6A7;
+}
+
+.track-heading.AT {
+  background-color: #FFF3E0;
+  color: #E65100;
+  border-left: 5px solid #FFCC80;
+}
+
+.track-heading.AH {
+  background-color: #F3E5F5;
+  color: #4A148C;
+  border-left: 5px solid #CE93D8;
+}
+
+.track-heading.ADB {
+  background-color: #E8EAF6;
+  color: #1A237E;
+  border-left: 5px solid #9FA8DA;
+}
+
+.filter-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+/* For smaller screens */
+@media (max-width: 768px) {
+  .filter-row {
+      flex-direction: column;
+      align-items: flex-start;
+  }
+  
+  .ivy-track-filter {
+      margin-top: 1rem;
+  }
+}

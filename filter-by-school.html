@@ -21,7 +21,41 @@
             <button id="filter-school-btn">筛选</button>
         </div>
         <div class="results-container">
-            <h2>筛选结果</h2>
+            <div class="results-header">
+                <h2>筛选结果</h2>
+                <div class="ivy-track-filter">
+                    <label for="ivy-track-dropdown">爬藤赛道筛选:</label>
+                    <div class="dropdown">
+                        <button id="ivy-track-btn" class="dropdown-btn">选择赛道 ▼</button>
+                        <div id="ivy-track-dropdown" class="dropdown-content">
+                            <div class="dropdown-item">
+                                <input type="checkbox" id="track-DT" value="DT">
+                                <label for="track-DT">Desgin + Tech</label>
+                            </div>
+                            <div class="dropdown-item">
+                                <input type="checkbox" id="track-DH" value="DH">
+                                <label for="track-DH">Design + Humanity</label>
+                            </div>
+                            <div class="dropdown-item">
+                                <input type="checkbox" id="track-AT" value="AT">
+                                <label for="track-AT">Art + Tech</label>
+                            </div>
+                            <div class="dropdown-item">
+                                <input type="checkbox" id="track-AH" value="AH">
+                                <label for="track-AH">Art + Humanity</label>
+                            </div>
+                            <div class="dropdown-item">
+                                <input type="checkbox" id="track-ADB" value="ADB">
+                                <label for="track-ADB">Art/Design + Business</label>
+                            </div>
+                            <div class="dropdown-controls">
+                                <button id="apply-track-filter">应用筛选</button>
+                                <button id="clear-track-filter">清除筛选</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div id="program-results">
                 <!-- Table will be inserted here -->
             </div>

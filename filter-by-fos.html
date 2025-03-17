@@ -14,27 +14,64 @@
     </header>
     <main>
         <div class="filter-container">
-            <h2>选择专业领域</h2>
+          <h2>选择专业领域</h2>
+          <div class="filter-row">
             <select id="fos-dropdown">
-                <option value="">请选择...</option>
-                <!-- Will be populated by JavaScript -->
+              <option value="">请选择...</option>
+              <!-- Will be populated by JavaScript -->
             </select>
+            
+            <!-- Add the ivy track filter here -->
+            <div class="ivy-track-filter">
+              <label for="ivy-track-dropdown">赛道筛选:</label>
+              <div class="dropdown">
+                <button id="ivy-track-btn" class="dropdown-btn">选择赛道 ▼</button>
+                <div id="ivy-track-dropdown" class="dropdown-content">
+                  <div class="dropdown-item">
+                    <input type="checkbox" id="track-DT" value="DT">
+                    <label for="track-DT">Design + Tech</label>
+                  </div>
+                  <div class="dropdown-item">
+                    <input type="checkbox" id="track-DH" value="DH">
+                    <label for="track-DH">Design + Humanity</label>
+                  </div>
+                  <div class="dropdown-item">
+                    <input type="checkbox" id="track-AT" value="AT">
+                    <label for="track-AT">Art + Tech</label>
+                  </div>
+                  <div class="dropdown-item">
+                    <input type="checkbox" id="track-AH" value="AH">
+                    <label for="track-AH">Art + Humanity</label>
+                  </div>
+                  <div class="dropdown-item">
+                    <input type="checkbox" id="track-ADB" value="ADB">
+                    <label for="track-ADB">Art/Design + Business</label>
+                  </div>
+                  <div class="dropdown-controls">
+                    <button id="apply-track-filter">应用筛选</button>
+                    <button id="clear-track-filter">清除筛选</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+        
         <div class="results-container">
-            <h2>专业子领域及职业前景</h2>
-            <div id="subfos-careers">
-                <!-- Will be populated by JavaScript -->
-            </div>
-            
-            <h2>主要匹配项目</h2>
-            <div id="primary-matches">
-                <!-- Table will be inserted here -->
-            </div>
-            
-            <h2>次要匹配项目</h2>
-            <div id="secondary-matches">
-                <!-- Table will be inserted here -->
-            </div>
+          <h2>专业子领域及职业前景</h2>
+          <div id="subfos-careers">
+            <!-- Will be populated by JavaScript -->
+          </div>
+          
+          <h2>主要匹配项目</h2>
+          <div id="primary-matches">
+            <!-- Table will be inserted here -->
+          </div>
+          
+          <h2>次要匹配项目</h2>
+          <div id="secondary-matches">
+            <!-- Table will be inserted here -->
+          </div>
         </div>
     </main>
     <script src="js/dataLoader.js"></script>
